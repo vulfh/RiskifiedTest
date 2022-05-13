@@ -29,7 +29,7 @@ namespace CreditCardConnectors.Visa
             }
             catch (Exception ex)
             {
-                return new Response(false, ex.Message);
+                return new Response(false, ex.Message,true);
             }
         }
 
@@ -39,7 +39,7 @@ namespace CreditCardConnectors.Visa
             if(visaResponse.StatusCode == HttpStatusCode.OK)
             {
                 var content = await visaResponse.Content.ReadAsStringAsync();
-                var parsedResponse = JsonConvert.DeserializeObject<MasterCardResponse>(content);
+                var parsedResponse = JsonConvert.DeserializeObject<VisaResponse>(content);
                 if (parsedResponse != null)
                 {
                     if(parsedResponse.chargeResult == "Success")
@@ -53,12 +53,12 @@ namespace CreditCardConnectors.Visa
                 }
                 else
                 {
-                    response = new Response(false, "Unexpected response");
+                    response = new Response(false, "Unexpected response",true);
                 }
             }
             else
             {
-                response = new Response(false, "Connectivity error");
+                response = new Response(false, "Connectivity error",true);
             }
             return response;
 

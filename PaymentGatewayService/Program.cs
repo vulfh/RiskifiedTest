@@ -35,17 +35,17 @@ app.MapPost("/api/charge", async (HttpRequest request) => {
     {
         if (ValidatorsManager.Instance.Validate(chargeDetails))
         {
-            var connector = CreditCardConnectorFactory.Create(chargeDetails.creditCardCompany);
-            var response = await connector.sendChargeRequest(chargeDetails);
+           
+            var response = await ChargeCard(chargeDetails);
             if (response.Success)
             {
                 result = Results.Ok();
             }
             else
             {
-                result = Results.BadRequest(response.Message);
+                result = Results.BadRequest("Card Declined");
             }
-            
+            return result;
         }
         else
         {
@@ -63,4 +63,17 @@ app.MapPost("/api/charge", async (HttpRequest request) => {
 
 
 app.Run();
+
+static async Task<Response> ChargeCard(ChargeDetails chargeDetails)
+{
+
+    IResult result = Results.BadRequest();
+    var connector = CreditCardConnectorFactory.Create(chargeDetails.creditCardCompany);
+    var response = await Utils.RetryActionAsync<Response>(
+        new Func<Task<Response>>(async () => { return await connector.sendChargeRequest(chargeDetails); })
+        , (response) => !response.TechnicalFailure
+        , 3);
+    return response;
+    
+}
 

@@ -19,7 +19,8 @@ namespace CreditCardConnectors.MasterCard
                 var payload = new MasterCardPayload(chargeDetails);
                 var jsonPayload = JsonConvert.SerializeObject(payload);
                 var client = new HttpClient();
-                HttpContent content = new StringContent(jsonPayload,Encoding.UTF8, "application/json");
+                HttpContent content = new StringContent(jsonPayload,Encoding.Unicode, "application/json");
+                
                 content.Headers.Add("identifier", "Vulf");
                 var cdResponse = await client.PostAsync(url, content);
                 var response = await ParseVisaResponse(cdResponse);
@@ -27,7 +28,7 @@ namespace CreditCardConnectors.MasterCard
             }
             catch (Exception ex)
             {
-                return new Response(false, ex.Message);
+                return new Response(false, ex.Message,true);
             }
         }
 
@@ -51,12 +52,22 @@ namespace CreditCardConnectors.MasterCard
                 }
                 else
                 {
-                    response = new Response(false, "Unexpected response");
+                    response = new Response(false, "Unexpected response",true);
                 }
             }
-            else
+            else if (visaResponse.StatusCode == HttpStatusCode.BadRequest)
             {
-                response = new Response(false, "Connectivity error");
+                var content = await visaResponse.Content.ReadAsStringAsync();
+                var parsedResponse = JsonConvert.DeserializeObject<MasterCardFailureResponse>(content);
+                if (!string.IsNullOrEmpty(parsedResponse.decline_reason))
+                {
+                    response = new Response(false, parsedResponse.decline_reason);
+                }
+                else
+                {
+                    response = new Response(false, "Connectivity error", true);
+                }
+                
             }
             return response;
 

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace CreditCardConnectors.Visa
 {
-    public class MasterCardResponse
+    public class VisaResponse
     {
         public string chargeResult { get; set; }    
         public string resultReason { get; set; }
