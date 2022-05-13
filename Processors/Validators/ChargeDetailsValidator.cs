@@ -1,4 +1,5 @@
-﻿using PaymentGatewayService.Data;
+﻿using CreditCardConnectors;
+using PaymentGatewayService.Data;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,13 +16,29 @@ namespace Processors.Validators
             var chargeDetails = chargeDetailsToValidate as ChargeDetails;
             if (chargeDetails != null)
             {
-                return !string.IsNullOrWhiteSpace(chargeDetails.fullName)
-                   && !string.IsNullOrWhiteSpace(chargeDetails.creditCardCompany)
-                   && !string.IsNullOrWhiteSpace(chargeDetails.cvv)
-                   && chargeDetails.amount > 0;
+                return AreValuesNull(chargeDetails)
+                     && IsCreditCardCompanyNameValid(chargeDetails)
+                     && IsFullNameValid(chargeDetails);
             }
             else
                 return false;
         }
+        private bool AreValuesNull(ChargeDetails chargeDetails)
+        {
+            return !string.IsNullOrWhiteSpace(chargeDetails.fullName)
+                      && !string.IsNullOrWhiteSpace(chargeDetails.creditCardCompany)
+                      && !string.IsNullOrWhiteSpace(chargeDetails.cvv)
+                      && chargeDetails.amount > 0;
+        }
+        private bool IsCreditCardCompanyNameValid(ChargeDetails chargeDetails)
+        {
+            return CreditCardCompanies.CreditCards.Contains(chargeDetails.creditCardCompany);
+        }
+
+        private bool IsFullNameValid(ChargeDetails chargeDetails)
+        {
+            return chargeDetails.fullName.Contains(" ");
+        }
     }
+   
 }

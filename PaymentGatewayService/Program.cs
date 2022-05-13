@@ -1,3 +1,4 @@
+using CreditCardConnectors;
 using PaymentGatewayService.Data;
 using Processors;
 
@@ -34,7 +35,17 @@ app.MapPost("/api/charge", async (HttpRequest request) => {
     {
         if (ValidatorsManager.Instance.Validate(chargeDetails))
         {
-            result =  Results.Ok();
+            var connector = CreditCardConnectorFactory.Create(chargeDetails.creditCardCompany);
+            var response = await connector.sendChargeRequest(chargeDetails);
+            if (response.Success)
+            {
+                result = Results.Ok();
+            }
+            else
+            {
+                result = Results.BadRequest(response.Message);
+            }
+            
         }
         else
         {
